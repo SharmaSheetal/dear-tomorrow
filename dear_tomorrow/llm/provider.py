@@ -24,7 +24,14 @@ def get_model():
         if not api_key:
             raise RuntimeError("MODEL_PROVIDER=groq but GROQ_API_KEY is not set in the environment.")
         model_id = os.environ.get("GROQ_MODEL_ID", DEFAULT_GROQ_MODEL_ID)
-        return LiteLLMModel(model_id=model_id, client_args={"api_key": api_key})
+        # gpt-oss models emit a long internal chain-of-thought before every tool call by
+        # default, which is what actually burns through Groq's free-tier token budget --
+        # low reasoning effort cuts that down without changing tool-calling behavior.
+        return LiteLLMModel(
+            model_id=model_id,
+            client_args={"api_key": api_key},
+            params={"reasoning_effort": "low"},
+        )
 
     if provider == "gemini":
         raise NotImplementedError("Gemini provider not wired up yet -- set MODEL_PROVIDER=groq for now.")
