@@ -13,4 +13,4 @@ wheels/
 .env
 .env.local
 # excel 
-*no.xlsx
+*.xlsx
