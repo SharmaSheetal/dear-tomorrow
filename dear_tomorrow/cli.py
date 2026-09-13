@@ -1,0 +1,1 @@
+"""Phase 1 chat interface: basic input/print loop against the orchestrator. Scaffold only."""

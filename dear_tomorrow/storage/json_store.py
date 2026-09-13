@@ -1,0 +1,1 @@
+"""JSON-file-backed repository for domain state (profile, goals, schedule). Scaffold only."""

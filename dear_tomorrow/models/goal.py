@@ -1,0 +1,1 @@
+"""Goal domain model. Scaffold only -- fields added in a later step."""

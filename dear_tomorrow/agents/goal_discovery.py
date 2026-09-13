@@ -1,0 +1,1 @@
+"""Proposes a single small goal when the user has none. Scaffold only."""

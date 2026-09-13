@@ -1,0 +1,1 @@
+"""Turns a goal into small scheduled activities. Scaffold only."""

@@ -1,0 +1,1 @@
+"""Top-level agent the user talks to; delegates to goal_discovery and planner via agents-as-tools. Scaffold only."""
