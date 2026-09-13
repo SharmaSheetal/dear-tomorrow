@@ -44,7 +44,14 @@ def get_schedule(start_date: str, end_date: str | None = None) -> dict:
     return {"items": [i.model_dump(mode="json") for i in items]}
 
 
-def _free_slots_for_day(state, d: date, duration_minutes: int, day_start_min: int, day_end_min: int) -> list[str]:
+def _free_windows_for_day(state, d: date, duration_minutes: int, day_start_min: int, day_end_min: int) -> list[dict]:
+    """Return free windows {start, end} at least duration_minutes long.
+
+    A window's *end* is when it stops being free, not just "the last valid start time" --
+    any start time from `start` up to `end` minus duration_minutes is a valid choice
+    within it. Returning a single ambiguous start point (e.g. just "07:00" for an entire
+    empty day) previously led a model to conclude only that exact instant was free.
+    """
     busy_items = sorted(
         (i for i in state.schedule_items if i.date == d and i.status == "planned"),
         key=lambda i: i.start_time,
@@ -55,15 +62,15 @@ def _free_slots_for_day(state, d: date, duration_minutes: int, day_start_min: in
     ]
 
     cursor = day_start_min
-    free_slots = []
+    windows = []
     for busy_start, busy_end in busy:
         if busy_start > cursor and busy_start - cursor >= duration_minutes:
-            free_slots.append(cursor)
+            windows.append({"start": _to_time_str(cursor), "end": _to_time_str(busy_start)})
         cursor = max(cursor, busy_end)
     if day_end_min - cursor >= duration_minutes:
-        free_slots.append(cursor)
+        windows.append({"start": _to_time_str(cursor), "end": _to_time_str(day_end_min)})
 
-    return [_to_time_str(m) for m in free_slots]
+    return windows
 
 
 @tool
@@ -89,9 +96,10 @@ def get_free_time(
         day_end: Latest time of day to consider (HH:MM), default 22:00.
 
     Returns:
-        {"days": [{"date": ..., "free_start_times": [...]}, ...]} -- each free_start_times
-        entry is a HH:MM time at which a slot of at least duration_minutes is open.
-        Skipped schedule items don't block time.
+        {"days": [{"date": ..., "free_windows": [{"start": ..., "end": ...}, ...]}, ...]}.
+        Each window is fully open from start to end -- pick any start time inside it (as
+        late as end minus duration_minutes). An empty free_windows list means no slot of
+        that length is open that day. Skipped schedule items don't block time.
     """
     state = load_state()
     start = date.fromisoformat(start_date)
@@ -104,7 +112,7 @@ def get_free_time(
     while current <= end:
         days.append({
             "date": current.isoformat(),
-            "free_start_times": _free_slots_for_day(state, current, duration_minutes, day_start_min, day_end_min),
+            "free_windows": _free_windows_for_day(state, current, duration_minutes, day_start_min, day_end_min),
         })
         current += timedelta(days=1)
 
