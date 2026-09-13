@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from strands import Agent, tool
 
 from dear_tomorrow.llm.provider import get_model
+from dear_tomorrow.llm.retry import call_with_retry
 from dear_tomorrow.models.goal import GoalArea
 from dear_tomorrow.tools.goal_tools import create_goal
 from dear_tomorrow.tools.profile_tools import get_user_profile
@@ -56,7 +57,7 @@ def goal_discovery_agent(user_message: str) -> dict:
         {"error": ...} if a goal could not be created (e.g. one already exists).
     """
     agent = Agent(model=get_model(), tools=[get_user_profile], system_prompt=SYSTEM_PROMPT)
-    result = agent(user_message, structured_output_model=GoalProposal)
+    result = call_with_retry(lambda: agent(user_message, structured_output_model=GoalProposal))
     proposal = result.structured_output
 
     created = create_goal(title=proposal.title, area=proposal.area, notes=proposal.reasoning)

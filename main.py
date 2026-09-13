@@ -1,6 +1,4 @@
-def main():
-    print("Hello from dear-tomorrow!")
-
+from dear_tomorrow.cli import main
 
 if __name__ == "__main__":
     main()

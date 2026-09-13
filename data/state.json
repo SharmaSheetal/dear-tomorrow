@@ -1,1 +1,16 @@
-{}
+{
+  "user_profile": {
+    "name": "User A",
+    "interests": [
+      "drawing",
+      "hiking"
+    ],
+    "constraints": [
+      "busy on weekday mornings"
+    ],
+    "mood_log": [],
+    "created_date": "2026-09-13"
+  },
+  "goals": [],
+  "schedule_items": []
+}
