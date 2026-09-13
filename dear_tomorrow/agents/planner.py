@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from strands import Agent, tool
 
 from dear_tomorrow.llm.provider import get_model
+from dear_tomorrow.llm.retry import call_with_retry
 from dear_tomorrow.tools.goal_tools import get_active_goal
 from dear_tomorrow.tools.schedule_tools import create_schedule_item, get_free_time, get_schedule
 
@@ -75,7 +76,7 @@ def planner_agent(context: str = "") -> dict:
         system_prompt=_build_system_prompt(),
     )
     prompt = f"Goal: {active_goal['title']} (area: {active_goal['area']}). {context}".strip()
-    result = agent(prompt, structured_output_model=PlanProposal)
+    result = call_with_retry(lambda: agent(prompt, structured_output_model=PlanProposal))
     proposal = result.structured_output
 
     created_items = []
